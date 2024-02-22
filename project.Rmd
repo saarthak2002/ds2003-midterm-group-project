@@ -14,7 +14,7 @@ library("tidyverse")
 
 ```{r}
 # Please Note: after downloading the data, rename it to "LA_data.csv" (and place it in the same directory)
-# The .gitignore file ignores this name to prevent the data from getting committed
+# The .gitignore file ignores this name to prevent the data from getting committed to GitHub
 data <- read.csv("LA_data.csv")
 ```
 

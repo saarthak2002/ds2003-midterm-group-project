@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Los Angeles Crime Data
 
-Our project focuses on crime data collected in the city of Los Angeles, CA in the last 4 years (2020-present). The data set can be downloaded [here](https://catalog.data.gov/dataset/crime-data-from-2020-to-present). The data set has been compiled by the LAPD (Los Angeles Police Department) based on crime reports in Los Angeles between the years of 2020 and 2024.
+Our project focuses on crime data collected in the city of Los Angeles, CA in the last 4 years (2020-present). The data set can be downloaded [here](https://catalog.data.gov/dataset/crime-data-from-2020-to-present) on data.gov. The data set has been compiled by the LAPD (Los Angeles Police Department) based on crime reports in Los Angeles between the years of 2020 and 2024.
 
 We plan to study if there is any relation between crime in LA and factors such as victim race, gender, age, location, etc. and what conclusions can be drawn from this data to better fight crime in the future.
 
