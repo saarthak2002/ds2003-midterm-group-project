@@ -20,3 +20,15 @@ We plan to study if there is any relation between crime in LA and factors such a
 The data set contains 16 numerical features, and 12 categorical features. We plan to use a subset of these features for our analysis. The data has 892,934 observations over the last 4 years. Some features we are particularly interested in are AREA.NAME, Date.Rptd, Crm.Cd.Desc, Vict.Sex, Vict.Descent, and Vict.Age.
 
 ## Questions
+
+### Question 1
+How are the number of crimes distributed in relation to the victim’s age, gender, and race in the last 4 years of crime data?
+
+### Question 2
+Are there certain areas in LA that have more crime than others, and how is the type of crime distributed between different areas in the last 4 years?
+
+### Question 3
+What is the distribution of the types of weapons used, and how does a victim's sex/age/race impact the type of weapon used on them?
+
+We plan to answer these questions by re-grouping the data in useful ways and generating plots that will help paint a better picture of the underlying factors driving crime in LA.
+
