@@ -200,8 +200,16 @@ data <- data %>%
 table(data$Crime_Broad_Category)
 ```
 
-```{r fig.width = 10}
+# Question 1
 
+```{r}
+
+```
+
+
+# Question 2
+
+```{r fig.width = 10}
 # Find the number of crimes in each category for each area of LA
 crime_counts_by_area <- data %>%
   group_by(AREA.NAME, Crime_Broad_Category) %>%
@@ -215,21 +223,36 @@ area_totals <- data %>%
 # Merge the total crimes and crimes by type data frames
 crime_conuts_by_area_with_totals <- merge(crime_counts_by_area, area_totals, by = "AREA.NAME")
 
+# Normalize the crimes by the population of each area (crimes per 1000 people)
+population_by_lapd_juris <- read.csv("police_la_juris_pop.csv")
+crime_conuts_by_area_with_totals <- merge(crime_conuts_by_area_with_totals, population_by_lapd_juris, by = "AREA.NAME")
+crime_conuts_by_area_with_totals$Crimes_Per_1000_People <- (crime_conuts_by_area_with_totals$Count / crime_conuts_by_area_with_totals$Population) * 1000
+crime_conuts_by_area_with_totals$Total_Crimes_Per_1000_People <- (crime_conuts_by_area_with_totals$Total_Crimes / crime_conuts_by_area_with_totals$Population) * 1000
+
 # Make a bar chart which shows the 3 variables
-ggplot(crime_conuts_by_area_with_totals, aes(x = Count, y = reorder(AREA.NAME, Total_Crimes), fill = Crime_Broad_Category)) +
+ggplot(crime_conuts_by_area_with_totals, aes(x = Crimes_Per_1000_People, y = reorder(AREA.NAME, Total_Crimes_Per_1000_People), fill = Crime_Broad_Category)) +
   geom_bar(stat = "identity") +
   labs(x = "Count", y = "Area") +
   labs(
-    title = "Number of Crimes in Los Angeles",
-    subtitle = "",
-    x = "Number of Reports",
+    title = "Number of Crimes in Los Angeles (2020 - Present)",
+    subtitle = "Per 1,000 People by Area and Crime Type",
+    x = "Number of Crimes Per 1,000 People",
     y = "Area of City",
     fill = 'Crime Type',
     caption = "Data from the LAPD"
   ) +
   theme_minimal()
+```
+
+# Question 3
+
+```{r}
 
 ```
+
+
+## Work in progress code
+
 
 ```{r}
 ggplot(data, aes(x = LON, y = LAT, color = Vict.Descent)) +
@@ -245,3 +268,37 @@ ggplot(data, aes(x = LON, y = LAT, color = Crime_Broad_Category)) +
   theme_minimal()
 ```
 
+```{r fig.width = 10}
+
+# Find the number of crimes in each category for each area of LA
+crime_counts_by_area <- data %>%
+  group_by(AREA.NAME, Crime_Broad_Category) %>%
+  summarise(Count = n())
+
+# Get the total crimes for each area
+area_totals <- data %>%
+  group_by(AREA.NAME) %>%
+  summarise(Total_Crimes = n())
+
+# Merge the total crimes and crimes by type data frames
+crime_conuts_by_area_with_totals <- merge(crime_counts_by_area, area_totals, by = "AREA.NAME")
+
+# Normalize the crimes by the population of each area (crimes per 1000 people)
+population_by_lapd_juris <- read.csv("police_la_juris_pop.csv")
+crime_conuts_by_area_with_totals <- merge(crime_conuts_by_area_with_totals, population_by_lapd_juris, by = "AREA.NAME")
+crime_conuts_by_area_with_totals$Crimes_Per_1000_People <- (crime_conuts_by_area_with_totals$Count / crime_conuts_by_area_with_totals$Population) * 1000
+
+# Make a bar chart which shows the 3 variables
+ggplot(crime_conuts_by_area_with_totals, aes(x = Count, y = reorder(AREA.NAME, Total_Crimes), fill = Crime_Broad_Category)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Count", y = "Area") +
+  labs(
+    title = "Number of Crimes in Los Angeles",
+    x = "Number of Reports",
+    y = "Area of City",
+    fill = 'Crime Type',
+    caption = "Data from the LAPD"
+  ) +
+  theme_minimal()
+
+```
