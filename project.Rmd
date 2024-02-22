@@ -1,0 +1,247 @@
+---
+intitle: "DS 2003 Midterm Project - Group 5"
+output: html_document
+date: "2024-02-16"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library("tidyverse")
+```
+
+```{r}
+# Please Note: after downloading the data, rename it to "LA_data.csv" (and place it in the same directory)
+# The .gitignore file ignores this name to prevent the data from getting committed
+data <- read.csv("LA_data.csv")
+```
+
+```{r}
+data
+```
+
+# Data Cleaning
+
+```{r}
+
+
+# Remove crimes with no location info
+data <- data %>%
+  filter(LAT != 0.0 & LON != 0.0) %>%
+  mutate(index = row_number()) %>%
+  select(index, everything())
+
+# Convert to a proper data time format
+data$Date.Rptd <- as.Date(data$Date.Rptd, format = "%m/%d/%Y %I:%M:%S %p")
+
+
+# Filter for dates within the last year from 02/22/2024
+# data <- data[data$Date.Rptd >= as.Date("2023-02-22") & data$Date.Rptd <= as.Date("2024-02-22"), ]
+
+```
+
+
+```{r}
+data
+```
+
+
+#### Map crime types to broader categories
+
+```{r}
+# Map the 139 crime categories to broader categories
+crime_mappings <- c(
+  "VEHICLE - STOLEN" = "Theft and Property Crimes",
+  "BURGLARY FROM VEHICLE" = "Theft and Property Crimes",
+  "BIKE - STOLEN" = "Theft and Property Crimes",
+  "SHOPLIFTING-GRAND THEFT ($950.01 & OVER)" = "Theft and Property Crimes",
+  "THEFT OF IDENTITY" = "Theft and Property Crimes",
+  "BATTERY - SIMPLE ASSAULT" = "Assault and Violence",
+  "SODOMY/SEXUAL CONTACT B/W PENIS OF ONE PERS TO ANUS OTH" = "Sex Crimes",
+  "CRM AGNST CHLD (13 OR UNDER) (14-15 & SUSP 10 YRS OLDER)" = "Sex Crimes",
+  "SEX,UNLAWFUL(INC MUTUAL CONSENT, PENETRATION W/ FRGN OBJ" = "Sex Crimes",
+  "ASSAULT WITH DEADLY WEAPON, AGGRAVATED ASSAULT" = "Assault and Violence",
+  "LETTERS, LEWD  -  TELEPHONE CALLS, LEWD" = "Sex Crimes",
+  "THEFT-GRAND ($950.01 & OVER)EXCPT,GUNS,FOWL,LIVESTK,PROD" = "Theft and Property Crimes",
+  "RAPE, FORCIBLE" = "Sex Crimes",
+  "CRIMINAL THREATS - NO WEAPON DISPLAYED" = "Theft and Property Crimes",
+  "EMBEZZLEMENT, GRAND THEFT ($950.01 & OVER)" = "Fraud and White-Collar Crimes",
+  "THEFT FROM MOTOR VEHICLE - PETTY ($950 & UNDER)" = "Traffic and Vehicle-Related Crimes",
+  "CHILD ANNOYING (17YRS & UNDER)" = "Sex Crimes",
+  "BURGLARY" = "Theft and Property Crimes",
+  "CONTEMPT OF COURT" = "Miscellaneous Crimes",
+  "THEFT PLAIN - PETTY ($950 & UNDER)" = "Theft and Property Crimes",
+  "INTIMATE PARTNER - SIMPLE ASSAULT" = "Assault and Violence",
+  "LEWD CONDUCT" = "Sex Crimes",
+  "THEFT PLAIN - ATTEMPT" = "Theft and Property Crimes",
+  "THEFT FROM MOTOR VEHICLE - GRAND ($950.01 AND OVER)" = "Theft and Property Crimes",
+  "OTHER MISCELLANEOUS CRIME" = "Miscellaneous Crimes",
+  "ROBBERY" = "Theft and Property Crimes",
+  "BUNCO, GRAND THEFT" = "Theft and Property Crimes",
+  "SEXUAL PENETRATION W/FOREIGN OBJECT" = "Sex Crimes",
+  "BATTERY WITH SEXUAL CONTACT" = "Sex Crimes",
+  "INTIMATE PARTNER - AGGRAVATED ASSAULT" = "Assault and Violence",
+  "ORAL COPULATION" = "Sex Crimes",
+  "UNAUTHORIZED COMPUTER ACCESS" = "Fraud and White-Collar Crimes",
+  "VIOLATION OF RESTRAINING ORDER" = "Miscellaneous Crimes",
+  "SHOPLIFTING - PETTY THEFT ($950 & UNDER)" = "Theft and Property Crimes",
+  "VANDALISM - FELONY ($400 & OVER, ALL CHURCH VANDALISMS)" = "Theft and Property Crimes",
+  "BRANDISH WEAPON" = "Assault and Violence",
+  "DOCUMENT FORGERY / STOLEN FELONY" = "Fraud and White-Collar Crimes",
+  "SEX OFFENDER REGISTRANT OUT OF COMPLIANCE" = "Miscellaneous Crimes",
+  "VANDALISM - MISDEAMEANOR ($399 OR UNDER)" = "Theft and Property Crimes",
+  "CHILD ABUSE (PHYSICAL) - SIMPLE ASSAULT" = "Assault and Violence",
+  "CREDIT CARDS, FRAUD USE ($950.01 & OVER)" = "Fraud and White-Collar Crimes",
+  "THREATENING PHONE CALLS/LETTERS" = "Fraud and White-Collar Crimes",
+  "EXTORTION" = "Fraud and White-Collar Crimes",
+  "OTHER ASSAULT" = "Assault and Violence",
+  "PICKPOCKET" = "Theft and Property Crimes",
+  "DISTURBING THE PEACE" = "Assault and Violence",
+  "BUNCO, ATTEMPT" = "Fraud and White-Collar Crimes",
+  "HUMAN TRAFFICKING - INVOLUNTARY SERVITUDE" = "Sex Crimes",
+  "PEEPING TOM" = "Sex Crimes",
+  "VIOLATION OF COURT ORDER" = "Miscellaneous Crimes",
+  "FALSE POLICE REPORT" = "Fraud and White-Collar Crimes",
+  "CONTRIBUTING" = "Miscellaneous Crimes",
+  "FALSE IMPRISONMENT" = "Fraud and White-Collar Crimes",
+  "CHILD ABUSE (PHYSICAL) - AGGRAVATED ASSAULT" = "Assault and Violence",
+  "ATTEMPTED ROBBERY" = "Theft and Property Crimes",
+  "CREDIT CARDS, FRAUD USE ($950 & UNDER" = "Fraud and White-Collar Crimes",
+  "CHILD STEALING" = "Assault and Violence",
+  "LEWD/LASCIVIOUS ACTS WITH CHILD" = "Sex Crimes",
+  "EMBEZZLEMENT, PETTY THEFT ($950 & UNDER)" = "Fraud and White-Collar Crimes",
+  "CHILD NEGLECT (SEE 300 W.I.C.)" = "Assault and Violence",
+  "STALKING" = "Assault and Violence",
+  "DISHONEST EMPLOYEE - GRAND THEFT" = "Fraud and White-Collar Crimes",
+  "TRESPASSING" = "Miscellaneous Crimes",
+  "BURGLARY, ATTEMPTED" = "Theft and Property Crimes",
+  "RAPE, ATTEMPTED" = "Sex Crimes",
+  "DISCHARGE FIREARMS/SHOTS FIRED" = "Assault and Violence",
+  "ARSON" = "Theft and Property Crimes",
+  "HUMAN TRAFFICKING - COMMERCIAL SEX ACTS" = "Sex Crimes",
+  "VEHICLE - ATTEMPT STOLEN" = "Traffic and Vehicle-Related Crimes",
+  "PANDERING" = "Sex Crimes",
+  "FIREARMS RESTRAINING ORDER (FIREARMS RO)" = "Assault and Violence",
+  "RESISTING ARREST" = "Assault and Violence",
+  "BURGLARY FROM VEHICLE, ATTEMPTED" = "Traffic and Vehicle-Related Crimes",
+  "THEFT, PERSON" = "Theft and Property Crimes",
+  "BATTERY POLICE (SIMPLE)" = "Assault and Violence",
+  "VEHICLE, STOLEN - OTHER (MOTORIZED SCOOTERS, BIKES, ETC)" = "Traffic and Vehicle-Related Crimes",
+  "INDECENT EXPOSURE" = "Sex Crimes",
+  "THEFT FROM PERSON - ATTEMPT" = "Theft and Property Crimes",
+  "FAILURE TO YIELD" = "Traffic and Vehicle-Related Crimes",
+  "BOMB SCARE" = "Assault and Violence",
+  "ASSAULT WITH DEADLY WEAPON ON POLICE OFFICER" = "Assault and Violence",
+  "PIMPING" = "Sex Crimes",
+  "BUNCO, PETTY THEFT" = "Fraud and White-Collar Crimes",
+  "SHOTS FIRED AT INHABITED DWELLING" = "Assault and Violence",
+  "DEFRAUDING INNKEEPER/THEFT OF SERVICES, $950 & UNDER" = "Fraud and White-Collar Crimes",
+  "KIDNAPPING - GRAND ATTEMPT" = "Assault and Violence",
+  "SHOTS FIRED AT MOVING VEHICLE, TRAIN OR AIRCRAFT" = "Traffic and Vehicle-Related Crimes",
+  "TILL TAP - GRAND THEFT ($950.01 & OVER)" = "Theft and Property Crimes",
+  "VIOLATION OF TEMPORARY RESTRAINING ORDER" = "Miscellaneous Crimes",
+  "THROWING OBJECT AT MOVING VEHICLE" = "Traffic and Vehicle-Related Crimes",
+  "DOCUMENT WORTHLESS ($200.01 & OVER)" = "Fraud and White-Collar Crimes",
+  "KIDNAPPING" = "Assault and Violence",
+  "CRIMINAL HOMICIDE" = "Assault and Violence",
+  "PURSE SNATCHING" = "Theft and Property Crimes",
+  "THEFT FROM MOTOR VEHICLE - ATTEMPT" = "Traffic and Vehicle-Related Crimes",
+  "DISHONEST EMPLOYEE - PETTY THEFT" = "Fraud and White-Collar Crimes",
+  "CHILD PORNOGRAPHY" = "Sex Crimes",
+  "WEAPONS POSSESSION/BOMBING" = "Assault and Violence",
+  "DRIVING WITHOUT OWNER CONSENT (DWOC)" = "Traffic and Vehicle-Related Crimes",
+  "REPLICA FIREARMS(SALE,DISPLAY,MANUFACTURE OR DISTRIBUTE)" = "Fraud and White-Collar Crimes",
+  "LYNCHING" = "Assault and Violence",
+  "RECKLESS DRIVING" = "Traffic and Vehicle-Related Crimes",
+  "SHOPLIFTING - ATTEMPT" = "Theft and Property Crimes",
+  "COUNTERFEIT" = "Fraud and White-Collar Crimes",
+  "DEFRAUDING INNKEEPER/THEFT OF SERVICES, OVER $950.01" = "Fraud and White-Collar Crimes",
+  "BATTERY ON A FIREFIGHTER" = "Assault and Violence",
+  "CRUELTY TO ANIMALS" = "Assault and Violence",
+  "BOAT - STOLEN" = "Traffic and Vehicle-Related Crimes",
+  "ILLEGAL DUMPING" = "Miscellaneous Crimes",
+  "PROWLER" = "Theft and Property Crimes",
+  "DRUGS, TO A MINOR" = "Miscellaneous Crimes",
+  "THEFT, COIN MACHINE - PETTY ($950 & UNDER)" = "Theft and Property Crimes",
+  "DOCUMENT WORTHLESS ($200 & UNDER)" = "Fraud and White-Collar Crimes",
+  "MANSLAUGHTER, NEGLIGENT" = "Assault and Violence",
+  "PETTY THEFT - AUTO REPAIR" = "Theft and Property Crimes",
+  "THEFT, COIN MACHINE - ATTEMPT" = "Theft and Property Crimes",
+  "TILL TAP - PETTY ($950 & UNDER)" = "Theft and Property Crimes",
+  "PURSE SNATCHING - ATTEMPT" = "Theft and Property Crimes",
+  "LYNCHING - ATTEMPTED" = "Assault and Violence",
+  "BIKE - ATTEMPTED STOLEN" = "Theft and Property Crimes",
+  "GRAND THEFT / AUTO REPAIR" = "Traffic and Vehicle-Related Crimes",
+  "CONSPIRACY" = "Fraud and White-Collar Crimes",
+  "BRIBERY" = "Fraud and White-Collar Crimes",
+  "GRAND THEFT / INSURANCE FRAUD" = "Fraud and White-Collar Crimes",
+  "DRUNK ROLL" = "Theft and Property Crimes",
+  "CHILD ABANDONMENT" = "Assault and Violence",
+  "THEFT, COIN MACHINE - GRAND ($950.01 & OVER)" = "Theft and Property Crimes",
+  "DISRUPT SCHOOL" = "Miscellaneous Crimes",
+  "PICKPOCKET, ATTEMPT" = "Theft and Property Crimes",
+  "TELEPHONE PROPERTY - DAMAGE" = "Theft and Property Crimes",
+  "BEASTIALITY, CRIME AGAINST NATURE SEXUAL ASSLT WITH ANIM" = "Sex Crimes",
+  "BIGAMY" = "Fraud and White-Collar Crimes",
+  "FAILURE TO DISPERSE" = "Miscellaneous Crimes",
+  "FIREARMS EMERGENCY PROTECTIVE ORDER (FIREARMS EPO)" = "Miscellaneous Crimes",
+  "INCEST (SEXUAL ACTS BETWEEN BLOOD RELATIVES)" = "Sex Crimes",
+  "BLOCKING DOOR INDUCTION CENTER" = "Miscellaneous Crimes",
+  "INCITING A RIOT" = "Miscellaneous Crimes",
+  "DISHONEST EMPLOYEE ATTEMPTED THEFT" = "Fraud and White-Collar Crimes",
+  "TRAIN WRECKING" = "Miscellaneous Crimes"
+  )
+
+data <- data %>%
+  mutate(Crime_Broad_Category = crime_mappings[Crm.Cd.Desc])
+
+table(data$Crime_Broad_Category)
+```
+
+```{r fig.width = 10}
+
+# Find the number of crimes in each category for each area of LA
+crime_counts_by_area <- data %>%
+  group_by(AREA.NAME, Crime_Broad_Category) %>%
+  summarise(Count = n())
+
+# Get the total crimes for each area
+area_totals <- data %>%
+  group_by(AREA.NAME) %>%
+  summarise(Total_Crimes = n())
+
+# Merge the total crimes and crimes by type data frames
+crime_conuts_by_area_with_totals <- merge(crime_counts_by_area, area_totals, by = "AREA.NAME")
+
+# Make a bar chart which shows the 3 variables
+ggplot(crime_conuts_by_area_with_totals, aes(x = Count, y = reorder(AREA.NAME, Total_Crimes), fill = Crime_Broad_Category)) +
+  geom_bar(stat = "identity") +
+  labs(x = "Count", y = "Area") +
+  labs(
+    title = "Number of Crimes in Los Angeles",
+    subtitle = "",
+    x = "Number of Reports",
+    y = "Area of City",
+    fill = 'Crime Type',
+    caption = "Data from the LAPD"
+  ) +
+  theme_minimal()
+
+```
+
+```{r}
+ggplot(data, aes(x = LON, y = LAT, color = Vict.Descent)) +
+  geom_point(alpha = 0.5, size = 0.05) +
+  labs(x = 'Longitude', y = 'Latitude', title = 'LA Crime Data') +
+  theme_minimal()
+```
+
+```{r fig.width = 14}
+ggplot(data, aes(x = LON, y = LAT, color = Crime_Broad_Category)) +
+  geom_point(size=0.5) +
+  labs(x = 'Longitude', y = 'Latitude', title = 'LA Crime Data') +
+  theme_minimal()
+```
+
