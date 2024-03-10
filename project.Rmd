@@ -202,6 +202,11 @@ table(data$Crime_Broad_Category)
 # Question 1
 
 ```{r}
+table(data$Vict.Descent)
+```
+
+
+```{r}
 
 # Divide ages into age groups of 10 years
 data_valid_ages <- data[data$Vict.Age >= 1 & data$Vict.Age <= 99, ]
@@ -312,15 +317,65 @@ ggplot(crime_conuts_by_area_with_totals, aes(x = Crimes_Per_1000_People, y = reo
 ```{r}
 table(data$Weapon.Desc)
 ```
+```{r}
+# install.packages("treemapify")
+```
 
+
+```{r fig.width = 10}
+# Load necessary libraries
+library(tidyverse)
+library(treemapify)
+
+# Parse the weapon descriptions and create subcategories
+data_weapon_subcategories <- data %>%
+  mutate(Weapon_Subcategory = case_when(
+    grepl("KNIFE", Weapon.Desc) ~ "Knife",
+    grepl("GUN|REVOLVER|RIFLE|SHOTGUN|FIREARM|ASSAULT|UZI|SHOTGUN|PISTOL|SEMIAUTOMATIC", Weapon.Desc) ~ "Firearm",
+    grepl("AXE|MACHETE|SWORD|BLADE|BOTTLE|CLEAVER|RAZOR|SYRINGE|SCISSORS|CUTTING|SCREWDRIVER|GLASS", Weapon.Desc) ~ "Sharp Weapon",
+    grepl("BAT|BOARD|HAMMER|STICK|CHAIN|BLUNT|STICK|CONCRETE|PIPE|ROCK|TIRE IRON|BRICK", Weapon.Desc) ~ "Blunt Object",
+    grepl("CHEMICAL|POISON|MACE|SPRAY|CAUSTIC", Weapon.Desc) ~ "Chemical/Pepper Spray",
+    grepl("BOMB|EXPLOSIVE|EXPLOXIVE", Weapon.Desc) ~ "Explosive",
+    grepl("VEHICLE", Weapon.Desc) ~ "Vehicle",
+    grepl("BODILY|FEET|FIST", Weapon.Desc) ~ "Bodily Force",
+    grepl("UNKNOWN WEAPON/OTHER WEAPON", Weapon.Desc) ~ "Unknown Weapon",
+    grepl("VERBAL THREAT", Weapon.Desc) ~ "Verbal Threat",
+    grepl("FIRE|SCALDING", Weapon.Desc) ~ "Fire/Heat",
+    grepl("ANIMAL", Weapon.Desc) ~ "Animal",
+    TRUE ~ "Other"
+  ))
+
+# Count the occurrences of each subcategory
+weapon_subcategory_counts <- data_weapon_subcategories %>%
+  filter(Weapon_Subcategory != "Other") %>%
+  count(Weapon_Subcategory) %>%
+  arrange(desc(n))
+
+# Plot the treemap
+ggplot(weapon_subcategory_counts, aes(area = n, fill = Weapon_Subcategory, label = paste0(Weapon_Subcategory, ": ", n))) +
+  geom_treemap() +
+  geom_treemap_text(place = "centre", colour = "white", alpha = 1, reflow = T) +
+  scale_fill_viridis_d(option = "A") +
+  # theme(legend.position = "none") +
+  labs(
+    title = "Types of Weapons Used",
+    subtitle = "For Violent Crimes in Los Angeles, CA (2020-present)",
+    fill = "Weapon Type",
+    caption = "Data source: LAPD"
+  )
+
+```
 
 ## Work in progress code
 
 
-```{r}
-ggplot(data, aes(x = LON, y = LAT, color = Vict.Descent)) +
-  geom_point(alpha = 0.5, size = 0.05) +
+```{r fig.width = 14}
+
+ggplot(data_valid_ages, aes(x = LON, y = LAT, color = Race_Broad_Category)) +
+  
+  geom_point(alpha = 0.5, size = 1) +
   labs(x = 'Longitude', y = 'Latitude', title = 'LA Crime Data') +
+  scale_fill_manual(values = race_colors) +
   theme_minimal()
 ```
 
