@@ -26,7 +26,6 @@ data
 
 ```{r}
 
-
 # Remove crimes with no location info
 data <- data %>%
   filter(LAT != 0.0 & LON != 0.0) %>%
@@ -204,8 +203,72 @@ table(data$Crime_Broad_Category)
 
 ```{r}
 
+# Divide ages into age groups of 10 years
+data_valid_ages <- data[data$Vict.Age >= 1 & data$Vict.Age <= 99, ]
+data_valid_ages$Age_Group <- cut(
+  as.numeric(data_valid_ages$Vict.Age), 
+  breaks = seq(0, 100, by = 10), 
+  labels = c("0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-89", "90+")
+)
+
+# Clean up the victim sex column
+data_valid_ages <- data_valid_ages[data_valid_ages$Vict.Sex == "M" | data_valid_ages$Vict.Sex == "F", ]
+data_valid_ages$Vict.Sex <- factor(data_valid_ages$Vict.Sex, labels = c("Male", "Female"))
+
+# Aggregate the victim race column
+data_valid_ages <- data_valid_ages[data_valid_ages$Vict.Descent != "-" & data_valid_ages$Vict.Descent != "", ]
+
+race_mappings <- c(
+  "A" = "Asian",
+  "B" = "Black",
+  "C" = "Asian",
+  "D" = "Asian",
+  "F" = "Asian",
+  "G" = "Native Hawaiian/Pacific Islander",
+  "H" = "Hispanic/Latino",
+  "I" = "American Indian/Alaska Native",
+  "J" = "Asian",
+  "K" = "Asian",
+  "L" = "Hispanic/Latino",
+  "O" = "Others",
+  "P" = "Native Hawaiian/Pacific Islander",
+  "S" = "Native Hawaiian/Pacific Islander",
+  "U" = "Native Hawaiian/Pacific Islander",
+  "V" = "Asian",
+  "W" = "White",
+  "X" = "Others",
+  "Z" = "Asian"
+)
+
+race_colors <- c(
+  "Asian" = "#fdbf6f",
+  "Black" = "#e31a1c",
+  "Hispanic/Latino" = "#33a02c",
+  "White" = "#1f78b4",
+  "Native Hawaiian/Pacific Islander" = "#a6cee3",
+  "American Indian/Alaska Native" = "#ff7f00",
+  "Others" = "#6a3d9a"
+)
+
+data_valid_ages <- data_valid_ages %>%
+  mutate(Race_Broad_Category = race_mappings[Vict.Descent])
 ```
 
+```{r fig.width = 10}
+
+ggplot(data_valid_ages, aes(x = Age_Group, fill = Race_Broad_Category)) +
+  geom_bar(position = "dodge") +
+  facet_wrap(~ Vict.Sex, nrow = 1) +
+  labs(x = "Age Group", y = "Number of Crimes", fill = "Race") +
+  labs(
+    title = "Number of Crimes in Los Angeles, CA",
+    subtitle = "By Victim Sex, Age, and Descent",
+    caption = "Data from the LAPD"
+  ) +
+  scale_fill_manual(values = race_colors) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+```
 
 # Question 2
 
@@ -247,7 +310,7 @@ ggplot(crime_conuts_by_area_with_totals, aes(x = Crimes_Per_1000_People, y = reo
 # Question 3
 
 ```{r}
-
+table(data$Weapon.Desc)
 ```
 
 
