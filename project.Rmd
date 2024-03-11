@@ -399,7 +399,7 @@ ggplot() +
 ```{r}
 library(sf)
 
-LA <- st_read("/Users/saarthak/Documents/County_Boundary/County_Boundary.shp",
+LA <- st_read("County_Boundary.shp",
               stringsAsFactors = FALSE)
 LA_city <- filter(LA, CITY_LABEL == "Los Angeles")
 
