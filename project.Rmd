@@ -216,6 +216,12 @@ data_valid_ages$Age_Group <- cut(
   labels = c("0-9", "10-19", "20-29", "30-39", "40-49", "50-59", "60-69", "70-79", "80-89", "90+")
 )
 
+data_valid_ages$Age_Group_2 <- cut(
+  as.numeric(data_valid_ages$Vict.Age), 
+  breaks = seq(0, 100, by = 20), 
+  labels = c("0-19", "20-39", "40-59", "60-79", "80+")
+)
+
 # Clean up the victim sex column
 data_valid_ages <- data_valid_ages[data_valid_ages$Vict.Sex == "M" | data_valid_ages$Vict.Sex == "F", ]
 data_valid_ages$Vict.Sex <- factor(data_valid_ages$Vict.Sex, labels = c("Male", "Female"))
@@ -368,6 +374,41 @@ ggplot(weapon_subcategory_counts, aes(area = n, fill = Weapon_Subcategory, label
 
 # Apppendix
 
+## Question 1
+
+```{r}
+crime_trends <- data_valid_ages %>%
+  mutate(Date.Rptd = floor_date(Date.Rptd, unit = "month")) %>%
+  group_by(Date.Rptd, Vict.Sex, Race_Broad_Category, Age_Group_2) %>%
+  summarise(Num_Crimes = n()) %>%
+  ungroup()
+crime_trends
+```
+
+```{r fig.width = 14}
+
+ggplot(crime_trends, aes(x = Date.Rptd, y = Num_Crimes, color = Race_Broad_Category, linetype = Vict.Sex)) +
+  geom_line() +
+  facet_grid(rows = vars(Age_Group_2)) +
+  labs(
+    x = "Month",
+    y = "Number of Crimes",
+    color = "Victim Race",
+    linetype = "Victim Sex",
+    title = "Monthly Crime Trends by Age Group, Sex, and Race",
+    subtitle = "Number of Crimes Reported by Month for Each Demographic Group",
+    caption = "Data from the LAPD"
+  ) +
+  
+  scale_y_continuous(
+    sec.axis = sec_axis(~ ., name = "Age Group", breaks = NULL)
+  ) +
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_color_manual(values = race_colors)
+```
+
 ## Question 2
 
 ```{r fig.width = 14}
@@ -482,3 +523,76 @@ ggplot(crime_conuts_by_area_with_totals, aes(x = Count, y = reorder(AREA.NAME, T
   theme_minimal()
 
 ```
+
+```{r}
+crime_trends <- data_valid_ages %>%
+  group_by(Date.Rptd, Vict.Sex, Vict.Descent, Vict.Age) %>%
+  summarise(Num_Crimes = n()) %>%
+  ungroup()
+crime_trends
+```
+
+```{r}
+crime_trends <- data_valid_ages %>%
+  mutate(Date.Rptd = floor_date(Date.Rptd, unit = "month")) %>%
+  group_by(Date.Rptd, Vict.Sex, Race_Broad_Category, Age_Group_2) %>%
+  summarise(Num_Crimes = n()) %>%
+  ungroup()
+crime_trends
+```
+
+```{r fig.width = 14}
+
+ggplot(crime_trends, aes(x = Date.Rptd, y = Num_Crimes, color = Race_Broad_Category, linetype = Vict.Sex)) +
+  geom_line() +
+  facet_grid(rows = vars(Age_Group_2)) +
+  labs(
+    x = "Month",
+    y = "Number of Crimes",
+    color = "Victim Race",
+    linetype = "Victim Sex",
+    title = "Monthly Crime Trends by Age Group, Sex, and Race",
+    subtitle = "Number of Crimes Reported by Month for Each Demographic Group",
+    caption = "Data from the LAPD"
+  ) +
+  
+  scale_y_continuous(
+    sec.axis = sec_axis(~ ., name = "Age Group", breaks = NULL)
+  ) +
+  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
+  scale_color_manual(values = race_colors)
+```
+
+
+
+```{r}
+# Assuming you have a dataframe named 'data_valid_ages' with columns for date, Vict.Sex, Vict.Descent, and Vict.Age
+
+# Convert date column to Date type
+# data_valid_ages$Date <- as.Date(data_valid_ages$Date.Rptd, format = "%m/%d/%Y")
+
+# Aggregate data by date, Vict.Sex, Vict.Descent, and Vict.Age
+crime_trends <- data_valid_ages %>%
+  group_by(Date.Rptd, Vict.Sex, Race_Broad_Category, Vict.Age) %>%
+  summarise(Num_Crimes = n()) %>%
+  ungroup()
+
+# Plot the trends
+ggplot(crime_trends, aes(x = Date.Rptd, y = Num_Crimes, color = Vict.Sex, linetype = Race_Broad_Category)) +
+  geom_line() +
+  facet_grid(rows = vars(Vict.Age)) +
+  labs(
+    x = "Date",
+    y = "Number of Crimes",
+    color = "Sex",
+    linetype = "Race",
+    title = "Crime Trends Over Time by Age Group, Sex, and Race",
+    subtitle = "Number of Crimes Reported by Date for Each Demographic Group",
+    caption = "Data from the LAPD"
+  ) +
+  theme_minimal()
+
+```
+
