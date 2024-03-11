@@ -366,7 +366,69 @@ ggplot(weapon_subcategory_counts, aes(area = n, fill = Weapon_Subcategory, label
 
 ```
 
+# Apppendix
+
+## Question 2
+
+```{r fig.width = 14}
+
+race_colors <- c(
+  "Asian" = "#fdbf6f",
+  "Black" = "#e31a1c",
+  "Hispanic/Latino" = "#33a02c",
+  "White" = "#1f78b4",
+  "Native Hawaiian/Pacific Islander" = "#a6cee3",
+  "American Indian/Alaska Native" = "#ff7f00",
+  "Others" = "#6a3d9a"
+)
+
+ggplot() +
+  geom_point(data = data_valid_ages, aes(x = LON, y = LAT, color = Race_Broad_Category), alpha = 0.5, size = 1) +
+  labs(x = 'Longitude', y = 'Latitude', title = 'LA Crime Data') +
+  scale_fill_manual(values = race_colors) +
+  scale_color_manual(values = race_colors) +
+  labs(
+    title = "Distribution of Crimes in Los Angeles, CA",
+    subtitle = "Geographic Distribution by Race of Victim",
+    caption = "Data from the LAPD",
+    color = "Victim Race"
+  ) +
+  theme_minimal()
+```
+
+```{r}
+library(sf)
+
+LA <- st_read("/Users/saarthak/Documents/County_Boundary/County_Boundary.shp",
+              stringsAsFactors = FALSE)
+LA_city <- filter(LA, CITY_LABEL == "Los Angeles")
+
+
+ggplot() +
+  geom_sf(data=LA_city) +
+  geom_hex(data=data,
+           mapping = aes(x=LON, y=LAT), bins=11, color="black")+
+  scale_fill_fermenter(n.breaks=10,palette = "RdYlBu")+
+  labs (
+    title = "Number of Crimes in Los Angeles, CA",
+    subtitle = "Hexagons denote approximate location",
+    caption = "Data from the LAPD",
+    color = "Crimes"
+  ) +
+  theme_void() +
+  theme(
+    plot.subtitle = element_text(margin = margin(b = 10))
+  )
+```
+
 ## Work in progress code
+
+```{r}
+library(sf)
+LA <- st_read("County_Boundary.shp",
+              stringsAsFactors = FALSE)
+```
+
 
 
 ```{r fig.width = 14}
