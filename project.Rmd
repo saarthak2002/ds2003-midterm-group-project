@@ -2,6 +2,7 @@
 intitle: "DS 2003 Midterm Project - Group 5"
 output: html_document
 date: "2024-02-16"
+title: "LA Crime Data"
 ---
 
 ```{r setup, include=FALSE}
@@ -19,7 +20,7 @@ data <- read.csv("LA_data.csv")
 ```
 
 ```{r}
-data
+# data
 ```
 
 # Data Cleaning
@@ -40,12 +41,6 @@ data$Date.Rptd <- as.Date(data$Date.Rptd, format = "%m/%d/%Y %I:%M:%S %p")
 # data <- data[data$Date.Rptd >= as.Date("2023-02-22") & data$Date.Rptd <= as.Date("2024-02-22"), ]
 
 ```
-
-
-```{r}
-data
-```
-
 
 #### Map crime types to broader categories
 
@@ -323,6 +318,7 @@ ggplot(crime_conuts_by_area_with_totals, aes(x = Crimes_Per_1000_People, y = reo
 ```{r}
 table(data$Weapon.Desc)
 ```
+
 ```{r}
 # install.packages("treemapify")
 ```
@@ -382,6 +378,10 @@ crime_trends <- data_valid_ages %>%
   group_by(Date.Rptd, Vict.Sex, Race_Broad_Category, Age_Group_2) %>%
   summarise(Num_Crimes = n()) %>%
   ungroup()
+
+crime_trends <- crime_trends %>%
+  filter(Date.Rptd < max(Date.Rptd))
+
 crime_trends
 ```
 
@@ -440,7 +440,7 @@ ggplot() +
 ```{r}
 library(sf)
 
-LA <- st_read("County_Boundary.shp",
+LA <- st_read("/Users/saarthak/Documents/County_Boundary/County_Boundary.shp",
               stringsAsFactors = FALSE)
 LA_city <- filter(LA, CITY_LABEL == "Los Angeles")
 
@@ -462,137 +462,5 @@ ggplot() +
   )
 ```
 
-## Work in progress code
 
-```{r}
-library(sf)
-LA <- st_read("County_Boundary.shp",
-              stringsAsFactors = FALSE)
-```
-
-
-
-```{r fig.width = 14}
-
-ggplot(data_valid_ages, aes(x = LON, y = LAT, color = Race_Broad_Category)) +
-  
-  geom_point(alpha = 0.5, size = 1) +
-  labs(x = 'Longitude', y = 'Latitude', title = 'LA Crime Data') +
-  scale_fill_manual(values = race_colors) +
-  theme_minimal()
-```
-
-```{r fig.width = 14}
-ggplot(data, aes(x = LON, y = LAT, color = Crime_Broad_Category)) +
-  geom_point(size=0.5) +
-  labs(x = 'Longitude', y = 'Latitude', title = 'LA Crime Data') +
-  theme_minimal()
-```
-
-```{r fig.width = 10}
-
-# Find the number of crimes in each category for each area of LA
-crime_counts_by_area <- data %>%
-  group_by(AREA.NAME, Crime_Broad_Category) %>%
-  summarise(Count = n())
-
-# Get the total crimes for each area
-area_totals <- data %>%
-  group_by(AREA.NAME) %>%
-  summarise(Total_Crimes = n())
-
-# Merge the total crimes and crimes by type data frames
-crime_conuts_by_area_with_totals <- merge(crime_counts_by_area, area_totals, by = "AREA.NAME")
-
-# Normalize the crimes by the population of each area (crimes per 1000 people)
-population_by_lapd_juris <- read.csv("police_la_juris_pop.csv")
-crime_conuts_by_area_with_totals <- merge(crime_conuts_by_area_with_totals, population_by_lapd_juris, by = "AREA.NAME")
-crime_conuts_by_area_with_totals$Crimes_Per_1000_People <- (crime_conuts_by_area_with_totals$Count / crime_conuts_by_area_with_totals$Population) * 1000
-
-# Make a bar chart which shows the 3 variables
-ggplot(crime_conuts_by_area_with_totals, aes(x = Count, y = reorder(AREA.NAME, Total_Crimes), fill = Crime_Broad_Category)) +
-  geom_bar(stat = "identity") +
-  labs(x = "Count", y = "Area") +
-  labs(
-    title = "Number of Crimes in Los Angeles",
-    x = "Number of Reports",
-    y = "Area of City",
-    fill = 'Crime Type',
-    caption = "Data from the LAPD"
-  ) +
-  theme_minimal()
-
-```
-
-```{r}
-crime_trends <- data_valid_ages %>%
-  group_by(Date.Rptd, Vict.Sex, Vict.Descent, Vict.Age) %>%
-  summarise(Num_Crimes = n()) %>%
-  ungroup()
-crime_trends
-```
-
-```{r}
-crime_trends <- data_valid_ages %>%
-  mutate(Date.Rptd = floor_date(Date.Rptd, unit = "month")) %>%
-  group_by(Date.Rptd, Vict.Sex, Race_Broad_Category, Age_Group_2) %>%
-  summarise(Num_Crimes = n()) %>%
-  ungroup()
-crime_trends
-```
-
-```{r fig.width = 14}
-
-ggplot(crime_trends, aes(x = Date.Rptd, y = Num_Crimes, color = Race_Broad_Category, linetype = Vict.Sex)) +
-  geom_line() +
-  facet_grid(rows = vars(Age_Group_2)) +
-  labs(
-    x = "Month",
-    y = "Number of Crimes",
-    color = "Victim Race",
-    linetype = "Victim Sex",
-    title = "Monthly Crime Trends by Age Group, Sex, and Race",
-    subtitle = "Number of Crimes Reported by Month for Each Demographic Group",
-    caption = "Data from the LAPD"
-  ) +
-  
-  scale_y_continuous(
-    sec.axis = sec_axis(~ ., name = "Age Group", breaks = NULL)
-  ) +
-  scale_x_date(date_breaks = "3 months", date_labels = "%b %Y") + 
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
-  scale_color_manual(values = race_colors)
-```
-
-
-
-```{r}
-# Assuming you have a dataframe named 'data_valid_ages' with columns for date, Vict.Sex, Vict.Descent, and Vict.Age
-
-# Convert date column to Date type
-# data_valid_ages$Date <- as.Date(data_valid_ages$Date.Rptd, format = "%m/%d/%Y")
-
-# Aggregate data by date, Vict.Sex, Vict.Descent, and Vict.Age
-crime_trends <- data_valid_ages %>%
-  group_by(Date.Rptd, Vict.Sex, Race_Broad_Category, Vict.Age) %>%
-  summarise(Num_Crimes = n()) %>%
-  ungroup()
-
-# Plot the trends
-ggplot(crime_trends, aes(x = Date.Rptd, y = Num_Crimes, color = Vict.Sex, linetype = Race_Broad_Category)) +
-  geom_line() +
-  facet_grid(rows = vars(Vict.Age)) +
-  labs(
-    x = "Date",
-    y = "Number of Crimes",
-    color = "Sex",
-    linetype = "Race",
-    title = "Crime Trends Over Time by Age Group, Sex, and Race",
-    subtitle = "Number of Crimes Reported by Date for Each Demographic Group",
-    caption = "Data from the LAPD"
-  ) +
-  theme_minimal()
-
-```
 
